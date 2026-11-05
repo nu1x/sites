@@ -33,6 +33,46 @@ dialog{border:1px solid #9fc1f24d;border-radius:20px;padding:28px;background:lin
 
 
 </style>
+  <style>
+/* Keep the selected panel in normal flow; only the departing page is overlaid. */
+#brief-form {
+  position: relative;
+  perspective: 1000px;
+  overflow-anchor: none;
+}
+#brief-form.is-paging {
+  overflow: hidden;
+  isolation: isolate;
+}
+#brief-form .step-panel {
+  animation: none;
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+}
+#brief-form .panel-leaving {
+  position: absolute;
+  inset: 0 0 auto;
+  pointer-events: none;
+  z-index: 1;
+}
+#brief-form .panel-entering {
+  position: relative;
+  z-index: 2;
+}
+.motion-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px;
+  border: 0;
+  background: none;
+  color: #a5b5d1;
+  font-size: 9px;
+}
+.motion-toggle span { color: #9dc7ff; font-size: 20px; line-height: 1; }
+.motion-toggle[aria-pressed="false"] { opacity: .55; }
+
+</style>
 </head>
 <body>
 <a class="skip" href="#builder">Перейти к конструктору</a>
@@ -126,7 +166,7 @@ dialog{border:1px solid #9fc1f24d;border-radius:20px;padding:28px;background:lin
               <label class="field-label" for="notes">Что ещё нам знать?</label><textarea id="notes" name="notes" rows="2" maxlength="1500" placeholder="Название, пожелания, примеры, важные функции…"></textarea>
             </div>
           </form>
-          <div class="step-navigation"><button class="text-button" id="previous" type="button" disabled>← Назад</button><button class="button primary compact" id="next" type="button">Далее <span aria-hidden="true">→</span></button></div>
+          <div class="step-navigation"><button class="text-button" id="previous" type="button" disabled>← Назад</button><button class="motion-toggle" id="page-motion" type="button" aria-pressed="true" aria-label="Отключить перелистывание" title="Отключить перелистывание"><span aria-hidden="true">∿</span> Переходы</button><button class="button primary compact" id="next" type="button">Далее <span aria-hidden="true">→</span></button></div>
         </div>
         <aside class="preview-area" aria-label="Живой предпросмотр сайта">
           <div class="preview-toolbar"><span><span class="live-dot"></span> Ваша идея вживую</span><div class="device-controls" role="group" aria-label="Размер предпросмотра"><button type="button" data-device="desktop" aria-label="Компьютер" aria-pressed="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 21h8m-4-5v5"/></svg></button><button type="button" data-device="mobile" aria-label="Телефон" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4"/></svg></button></div></div>
@@ -231,6 +271,51 @@ dialog{border:1px solid #9fc1f24d;border-radius:20px;padding:28px;background:lin
   const panels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let step = 0, shownPrice = 90000, priceFrame;
+  let pageMotion = [], pageTurn = 0;
+  // This explicit navigation effect is user-controlled; ambient motion still respects reduce.
+  let pageMotionEnabled = true;
+  let scrollFrame, restoreScrollBehavior;
+  function stopScroll() {
+    cancelAnimationFrame(scrollFrame);
+    if (restoreScrollBehavior !== undefined) {
+      document.documentElement.style.scrollBehavior = restoreScrollBehavior;
+      restoreScrollBehavior = undefined;
+    }
+  }
+  function scrollToSection(target) {
+    stopScroll();
+    const from = scrollY;
+    const to = target.id === 'top' ? 0 : Math.max(0, Math.min(
+      document.documentElement.scrollHeight - innerHeight,
+      from + target.getBoundingClientRect().top - 24
+    ));
+    restoreScrollBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = 'auto';
+    if (!pageMotionEnabled) { scrollTo(0, to); stopScroll(); return; }
+    const started = performance.now();
+    function frame(now) {
+      const p = Math.min(1, (now - started) / 900);
+      const eased = p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p+2,3)/2;
+      scrollTo(0, from + (to-from)*eased);
+      if (p < 1) scrollFrame = requestAnimationFrame(frame); else stopScroll();
+    }
+    scrollFrame = requestAnimationFrame(frame);
+  }
+  document.querySelectorAll('a[href^="#"]:not(.skip)').forEach(link => {
+    link.addEventListener('click', event => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = document.getElementById(link.hash.slice(1));
+      if (!target) return;
+      event.preventDefault();
+      history.pushState(null, '', link.hash);
+      scrollToSection(target);
+    });
+  });
+  addEventListener('wheel', stopScroll, {passive:true});
+  addEventListener('touchstart', stopScroll, {passive:true});
+  addEventListener('keydown', event => {
+    if (['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].includes(event.key)) stopScroll();
+  });
   function values() { const d = new FormData(form); return M.normalize({ format:d.get('format'), design:d.get('design'), palette:d.get('palette'), font:d.get('font'), extras:d.getAll('extras') }); }
   function fields() { return Object.fromEntries(['topic','phone','reference','notes'].map(id => [id, $(id).value])); }
   function priceTo(target) {
@@ -269,13 +354,87 @@ dialog{border:1px solid #9fc1f24d;border-radius:20px;padding:28px;background:lin
     if (!reduce && preview.animate) preview.animate([{opacity:.75,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:300,easing:'ease-out'});
   }
   function go(index, focusTab = false) {
-    step = Math.max(0,Math.min(4,index));
-    tabs.forEach((t,i)=>{t.setAttribute('aria-selected',i===step);t.tabIndex=i===step?0:-1;t.classList.toggle('completed',i<step);panels[i].hidden=i!==step;});
+    const nextStep = Math.max(0,Math.min(4,index));
+    if (nextStep === step) { if (focusTab) tabs[step].focus(); return; }
+    const outgoing = panels[step], incoming = panels[nextStep];
+    const fromHeight = form.getBoundingClientRect().height;
+    const direction = nextStep > step ? 1 : -1;
+    const turn = ++pageTurn;
+    pageMotion.forEach(animation => animation.cancel());
+    pageMotion = [];
+    form.classList.remove('is-paging');
+    form.style.removeProperty('height');
+    panels.forEach(panel => {
+      panel.hidden = panel !== incoming;
+      panel.inert = false;
+      panel.removeAttribute('aria-hidden');
+      panel.classList.remove('panel-leaving', 'panel-entering');
+    });
+    step = nextStep;
+    tabs.forEach((t,i)=>{t.setAttribute('aria-selected',i===step);t.tabIndex=i===step?0:-1;t.classList.toggle('completed',i<step);});
     $('step-count').textContent = `Шаг ${step+1} из 5`;
     $('previous').disabled = step===0;
     $('next').innerHTML = step===4 ? 'Подготовить бриф <span aria-hidden="true">↗</span>' : 'Далее <span aria-hidden="true">→</span>';
-    if(focusTab) tabs[step].focus();
+    if (focusTab) {
+      tabs[step].focus({preventScroll:true});
+      if (tabs[step].getBoundingClientRect().top < 24) scrollToSection(document.querySelector('.step-tabs'));
+    }
+    if (pageMotionEnabled && form.animate) {
+      const toHeight = incoming.getBoundingClientRect().height;
+      form.style.height = fromHeight + 'px';
+      form.classList.add('is-paging');
+      outgoing.hidden = false;
+      outgoing.inert = true;
+      outgoing.setAttribute('aria-hidden', 'true');
+      outgoing.classList.add('panel-leaving');
+      incoming.classList.add('panel-entering');
+      const easing = 'cubic-bezier(.22,.61,.36,1)';
+      pageMotion = [
+        outgoing.animate([
+          {opacity:1, transform:'translateX(0) rotateY(0deg)'},
+          {opacity:0, transform:`translateX(${-direction * 45}px) rotateY(${-direction * 7}deg)`}
+        ], {duration:320, easing, fill:'both'}),
+        incoming.animate([
+          {opacity:0, transform:`translateX(${direction * 64}px) rotateY(${direction * 7}deg)`},
+          {opacity:1, transform:'translateX(0) rotateY(0deg)'}
+        ], {duration:650, delay:65, easing, fill:'both'}),
+        form.animate([{height:fromHeight+'px'}, {height:toHeight+'px'}], {duration:715, easing, fill:'both'})
+      ];
+      Promise.all(pageMotion.map(animation => animation.finished)).then(() => {
+        if (turn !== pageTurn) return;
+        outgoing.hidden = true;
+        outgoing.inert = false;
+        outgoing.removeAttribute('aria-hidden');
+        outgoing.classList.remove('panel-leaving');
+        incoming.classList.remove('panel-entering');
+        form.classList.remove('is-paging');
+        form.style.removeProperty('height');
+        pageMotion.forEach(animation => animation.cancel());
+        pageMotion = [];
+      }).catch(() => { /* A newer click has already reset the outgoing turn. */ });
+    }
   }
+  $('page-motion').addEventListener('click', () => {
+    pageMotionEnabled = !pageMotionEnabled;
+    $('page-motion').setAttribute('aria-pressed', pageMotionEnabled);
+    const label = pageMotionEnabled ? 'Отключить перелистывание' : 'Включить перелистывание';
+    $('page-motion').setAttribute('aria-label', label);
+    $('page-motion').title = label;
+    if (!pageMotionEnabled) {
+      stopScroll();
+      ++pageTurn;
+      pageMotion.forEach(animation => animation.cancel());
+      pageMotion = [];
+      form.classList.remove('is-paging');
+      form.style.removeProperty('height');
+      panels.forEach((panel, i) => {
+        panel.hidden = i !== step;
+        panel.inert = false;
+        panel.removeAttribute('aria-hidden');
+        panel.classList.remove('panel-leaving', 'panel-entering');
+      });
+    }
+  });
   tabs.forEach((tab,i)=>{
     tab.addEventListener('click',()=>go(i));
     tab.addEventListener('keydown',e=>{let n=i;if(e.key==='ArrowRight') n=(i+1)%5;else if(e.key==='ArrowLeft') n=(i+4)%5;else if(e.key==='Home') n=0;else if(e.key==='End') n=4;else return;e.preventDefault();go(n,true);});
