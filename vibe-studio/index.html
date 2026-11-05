@@ -71,6 +71,12 @@ dialog{border:1px solid #9fc1f24d;border-radius:20px;padding:28px;background:lin
 }
 .motion-toggle span { color: #9dc7ff; font-size: 20px; line-height: 1; }
 .motion-toggle[aria-pressed="false"] { opacity: .55; }
+@media (max-width: 540px) {
+  .format-options .option-card { min-height: 82px; grid-template-rows: auto; }
+  .format-options .option-icon,
+  .format-options .option-info,
+  .format-options .option-card > .radio-mark { grid-row: 1; }
+}
 
 </style>
 </head>
@@ -121,9 +127,9 @@ dialog{border:1px solid #9fc1f24d;border-radius:20px;padding:28px;background:lin
             <div class="step-panel" id="panel-0" role="tabpanel" aria-labelledby="tab-0">
               <h3>С чего начнём?</h3><p class="panel-description">Выберите задачу. Внешний вид настроим дальше.</p>
               <fieldset class="format-options"><legend class="sr-only">Формат сайта</legend>
-                <label class="option-card"><input type="radio" name="format" value="landing" checked><span class="option-icon">▤</span><span class="option-info"><b>Лендинг</b><small>Одна страница для продукта или услуги</small></span><span class="option-price">~90 000 ₽</span><span class="radio-mark"></span></label>
-                <label class="option-card"><input type="radio" name="format" value="business"><span class="option-icon">▦</span><span class="option-info"><b>Сайт компании</b><small>До 10 страниц о вашем бизнесе</small></span><span class="option-price">~195 000 ₽</span><span class="radio-mark"></span></label>
-                <label class="option-card"><input type="radio" name="format" value="shop"><span class="option-icon">▧</span><span class="option-info"><b>Интернет-магазин</b><small>Каталог, корзина и оформление заказа</small></span><span class="option-price">~235 000 ₽</span><span class="radio-mark"></span></label>
+                <label class="option-card"><input type="radio" name="format" value="landing" checked><span class="option-icon">▤</span><span class="option-info"><b>Лендинг</b><small>Одна страница для продукта или услуги</small></span><span class="radio-mark"></span></label>
+                <label class="option-card"><input type="radio" name="format" value="business"><span class="option-icon">▦</span><span class="option-info"><b>Сайт компании</b><small>До 10 страниц о вашем бизнесе</small></span><span class="radio-mark"></span></label>
+                <label class="option-card"><input type="radio" name="format" value="shop"><span class="option-icon">▧</span><span class="option-info"><b>Интернет-магазин</b><small>Каталог, корзина и оформление заказа</small></span><span class="radio-mark"></span></label>
               </fieldset>
               <label class="field-label" for="topic">О чём будет ваш сайт?</label><input id="topic" name="topic" maxlength="80" placeholder="Например, студия архитектуры" autocomplete="off"><p class="input-hint">Любая тема: от личного проекта до большого бизнеса.</p>
             </div>
@@ -179,7 +185,7 @@ dialog{border:1px solid #9fc1f24d;border-radius:20px;padding:28px;background:lin
           <p class="preview-note">Это эскиз настроения. Структуру и содержание будущего сайта спроектируем под вашу задачу.</p>
         </aside>
       </div>
-      <div class="estimate-bar"><div class="estimate-title"><span>Предварительная стоимость</span><strong class="total-price" id="total-price">~90 000 ₽</strong><small id="estimate-description">Лендинг · базовое оформление</small></div><div class="estimate-action"><button type="button" class="button light" id="prepare-brief">Подготовить бриф <span aria-hidden="true">↗</span></button><a href="#pricing">Как считается цена?</a></div></div>
+      <div class="estimate-bar"><div class="estimate-title"><span>Предварительная стоимость</span><strong class="total-price" id="total-price">~90 000 ₽</strong><small id="estimate-description">Лендинг · базовое оформление</small><span class="sr-only" id="price-live" role="status" aria-atomic="true">Предварительная стоимость: ~90 000 ₽</span></div><div class="estimate-action"><button type="button" class="button light" id="prepare-brief">Подготовить бриф <span aria-hidden="true">↗</span></button><a href="#pricing">Как считается цена?</a></div></div>
     </div>
     <p class="builder-bottom"><span>✧</span> Адаптивная версия, базовые SEO-настройки и форма заявки — в каждом варианте.</p>
   </section>
@@ -270,7 +276,7 @@ dialog{border:1px solid #9fc1f24d;border-radius:20px;padding:28px;background:lin
   const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
   const panels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let step = 0, shownPrice = 90000, priceFrame;
+  let step = 0, shownPrice = 90000, targetPrice = 90000, priceFrame = 0;
   let pageMotion = [], pageTurn = 0;
   // This explicit navigation effect is user-controlled; ambient motion still respects reduce.
   let pageMotionEnabled = true;
@@ -318,15 +324,28 @@ dialog{border:1px solid #9fc1f24d;border-radius:20px;padding:28px;background:lin
   });
   function values() { const d = new FormData(form); return M.normalize({ format:d.get('format'), design:d.get('design'), palette:d.get('palette'), font:d.get('font'), extras:d.getAll('extras') }); }
   function fields() { return Object.fromEntries(['topic','phone','reference','notes'].map(id => [id, $(id).value])); }
+  function renderPrice(value) {
+    const text = '~' + M.money(value);
+    $('total-price').textContent = text;
+    $('mobile-total').textContent = text;
+  }
   function priceTo(target) {
+    if (target === targetPrice && priceFrame) return;
     cancelAnimationFrame(priceFrame);
-    $('mobile-total').textContent = '~' + M.money(target);
+    priceFrame = 0;
+    targetPrice = target;
+    $('price-live').textContent = 'Предварительная стоимость: ~' + M.money(target);
+    if (!pageMotionEnabled || shownPrice === target) {
+      shownPrice = target;
+      renderPrice(target);
+      return;
+    }
     const from = shownPrice, started = performance.now();
     function frame(now) {
-      const progress = reduce ? 1 : Math.min(1, (now-started)/400);
+      const progress = Math.min(1, (now-started)/420);
       shownPrice = from + (target-from) * (1-Math.pow(1-progress,3));
-      $('total-price').textContent = '~' + M.money(shownPrice);
-      if (progress < 1) priceFrame = requestAnimationFrame(frame);
+      renderPrice(shownPrice);
+      priceFrame = progress < 1 ? requestAnimationFrame(frame) : 0;
     }
     priceFrame = requestAnimationFrame(frame);
   }
@@ -422,6 +441,10 @@ dialog{border:1px solid #9fc1f24d;border-radius:20px;padding:28px;background:lin
     $('page-motion').title = label;
     if (!pageMotionEnabled) {
       stopScroll();
+      cancelAnimationFrame(priceFrame);
+      priceFrame = 0;
+      shownPrice = targetPrice;
+      renderPrice(targetPrice);
       ++pageTurn;
       pageMotion.forEach(animation => animation.cancel());
       pageMotion = [];
