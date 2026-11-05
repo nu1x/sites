@@ -8,6 +8,7 @@
 | --- | --- | --- |
 | [best flower studio](Portfolio/best-flower-studio/README.md) | [Автономный HTML](Portfolio/best-flower-studio/best-flower-studio.html) | Цветочные палитры, живой подбор размера, мягкие появления, bounce карточки, выдвижная корзина |
 | [VIBE](Portfolio/vibe-studio/README.md) | [Автономный HTML](Portfolio/vibe-studio/index.html) | Конструктор брифа, живой предпросмотр, плавное перелистывание шагов и счётчик стоимости |
+| [Сосновый берег](Portfolio/sosnovy-bereg/README.md) | [Автономный HTML](Portfolio/sosnovy-bereg/index.html) | SVG-генплан на 64 участка, многослойный параллакс, sticky-проекты домов, шторки изображений и экскурсия |
 
 ## Как пополнять библиотеку
 

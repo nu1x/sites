@@ -1,0 +1,83 @@
+{
+  "downloaded": "2026-11-05",
+  "license": "Unsplash License",
+  "license_url": "https://unsplash.com/license",
+  "notice": "All photos are illustrative references and do not depict Sosnovy Bereg or confirm project specifications. Free license verified on individual photo pages.",
+  "images": [
+    {
+      "file": "hero.jpg",
+      "author": "Sebastian (@gsebastian)",
+      "page": "https://unsplash.com/photos/calm-lake-and-forest-landscape-HRUEDOaF_hc",
+      "image_url": "https://images.unsplash.com/photo-1789121003974-178577d9b321",
+      "note": "Wide calm lake and forest landscape, not actual settlement"
+    },
+    {
+      "file": "aerial.jpg",
+      "author": "Kristaps Ungurs (@kristapsungurs)",
+      "page": "https://unsplash.com/photos/aerial-view-of-forest-bordering-a-dark-lake-CcDQdKcwTFU",
+      "image_url": "https://images.unsplash.com/photo-1756567579488-fc5fc228454d",
+      "note": "Finland, aerial forest lake, not actual settlement"
+    },
+    {
+      "file": "forest.jpg",
+      "author": "Pascal Debrunner",
+      "page": "https://unsplash.com/photos/sunlight-in-misty-pine-forest-Hp5lHpvSfns",
+      "image_url": "https://images.unsplash.com/photo-1793024918826-24992ab26263",
+      "note": "Sunlit forest in Switzerland, not actual settlement"
+    },
+    {
+      "file": "house-1.jpg",
+      "author": "Nhi Ly (@nnhilys)",
+      "page": "https://unsplash.com/photos/modern-cabin-with-large-windows-surrounded-by-trees-y6Dcrae8FNs",
+      "image_url": "https://images.unsplash.com/photo-1775547081703-1472317fe554",
+      "note": "Architecture reference only, not a real project for sale"
+    },
+    {
+      "file": "house-2.jpg",
+      "author": "Polina Kuzovkova (@p_kuzovkova)",
+      "page": "https://unsplash.com/photos/a-cabin-in-the-woods-surrounded-by-trees-JSezq0Td59k",
+      "image_url": "https://images.unsplash.com/photo-1703782997454-8eb0d4d94e9c",
+      "note": "Architecture reference only, not a real project for sale"
+    },
+    {
+      "file": "house-3.jpg",
+      "author": "Taylor Friehl (@taylor_friehl)",
+      "page": "https://unsplash.com/photos/modern-wooden-house-with-lush-green-plants-outdoors--kI-E3Cs5I0",
+      "image_url": "https://images.unsplash.com/photo-1770306924354-1b3adaf27be5",
+      "note": "Architecture reference only, not a real project for sale"
+    },
+    {
+      "file": "house-4.jpg",
+      "author": "sayan Nath (@hiresayan)",
+      "page": "https://unsplash.com/photos/modern-wooden-house-on-stilts-with-large-windows-0_1M88jjvxM",
+      "image_url": "https://images.unsplash.com/photo-1775116483674-517eb677b6b7",
+      "note": "Architecture reference only, not a real project for sale"
+    },
+    {
+      "file": "dock.jpg",
+      "author": "Kristaps Ungurs (@kristapsungurs)",
+      "page": "https://unsplash.com/photos/wooden-dock-by-reeds-on-a-misty-lake-dEQv5dyVbG8",
+      "image_url": "https://images.unsplash.com/photo-1760592150401-58572faf676c",
+      "note": "Atmosphere reference only, not actual settlement"
+    },
+    {
+      "file": "construction.jpg",
+      "author": "Troy Mortier (@troyscanon)",
+      "page": "https://unsplash.com/photos/a-house-under-construction-with-wooden-framing-kkdfOe0iRu8",
+      "image_url": "https://images.unsplash.com/photo-1676802037786-3697d60497ae",
+      "note": "Clyde North, Australia, illustrative construction photo, not progress at settlement"
+    }
+  ],
+  "fonts": {
+    "source": "copied from local petale/assets",
+    "families": [
+      "Cormorant Garamond",
+      "Manrope"
+    ],
+    "licenses": [
+      "Cormorant-OFL.txt",
+      "Manrope-OFL.txt"
+    ],
+    "css": "fonts.css"
+  }
+}
